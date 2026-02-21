@@ -25,7 +25,7 @@ public class FileMetadata {
     private String originalName;
 
     @Column(name = "stored_name", nullable = false, length = 1000)
-    private String storageName;
+    private String storedName;
 
     @Column(name = "content_type", nullable = false, length = 200)
     private String contentType;
