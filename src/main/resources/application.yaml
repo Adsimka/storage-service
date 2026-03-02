@@ -31,4 +31,17 @@ spring:
     liquibase:
       enabled: true
       change-log: classpath:db/changelog/db.changelog-master.yaml
+  minio:
+    accessKey: minioadmin
+    secretKey: minioadmin
+    endpoint: http://localhost:9000
 
+file:
+  maxFileSizeMb: 50
+  presignedUrlExpiryHours: 5
+  allowedExtensions:
+    - pdf
+    - doc
+    - docx
+    - xml
+    - xlsx

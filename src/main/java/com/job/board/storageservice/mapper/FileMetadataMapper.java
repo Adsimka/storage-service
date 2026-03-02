@@ -1,12 +1,12 @@
 package com.job.board.storageservice.mapper;
 
 import com.job.board.storageservice.config.MappingConfig;
-import com.job.board.storageservice.model.dto.FileMetadataReadDto;
-import com.job.board.storageservice.model.dto.FileMetadataUploadDto;
-import com.job.board.storageservice.model.dto.FileUploadResponseDto;
+import com.job.board.storageservice.model.dto.*;
 import com.job.board.storageservice.model.entity.FileMetadata;
 import org.mapstruct.Mapper;
+import org.springframework.core.io.InputStreamResource;
 
+import java.io.InputStream;
 import java.util.UUID;
 
 import static com.job.board.storageservice.util.FileNameGenerator.generateStoragePath;
@@ -17,9 +17,11 @@ import static com.job.board.storageservice.util.FileNameGenerator.generateStored
 )
 public interface FileMetadataMapper {
 
-    FileUploadResponseDto toUploadResponseDto(FileMetadata fileMetadata);
+    FileSaveResponseDto toUploadResponseDto(FileMetadata fileMetadata);
 
     FileMetadataReadDto toReadDto(FileMetadata fileMetadata);
+
+    FileMetadataDeleteDto toDeleteDto(FileMetadata fileMetadata);
 
     FileMetadata toEntity(FileMetadataUploadDto fileMetadataUploadDto);
 
@@ -36,4 +38,20 @@ public interface FileMetadataMapper {
                 .build();
     }
 
+    default FileMetadataDownloadDto toDownloadDto(FileMetadata fileMetadata) {
+        return FileMetadataDownloadDto.builder()
+                .originalName(fileMetadata.getOriginalName())
+                .contentType(fileMetadata.getContentType())
+                .bucket(fileMetadata.getBucket())
+                .storedName(fileMetadata.getStoredName())
+                .build();
+    }
+
+    default FileResourceDto toResourceDto(FileMetadataDownloadDto dto, InputStream stream) {
+        return FileResourceDto.builder()
+                .originalName(dto.originalName())
+                .contentType(dto.contentType())
+                .resource(new InputStreamResource(stream))
+                .build();
+    }
 }

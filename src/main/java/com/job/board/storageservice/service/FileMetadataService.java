@@ -1,16 +1,18 @@
 package com.job.board.storageservice.service;
 
-import com.job.board.storageservice.model.dto.FileMetadataReadDto;
-import com.job.board.storageservice.model.dto.FileMetadataUploadDto;
-import com.job.board.storageservice.model.dto.FileUploadResponseDto;
+import com.job.board.storageservice.model.dto.*;
 
 import java.util.UUID;
 
 public interface FileMetadataService {
 
-    FileUploadResponseDto create(FileMetadataUploadDto dto);
+    FileSaveResponseDto save(FileMetadataUploadDto dto);
 
-    FileMetadataReadDto findById(UUID id);
+    FileMetadataReadDto findByIdForRead(UUID id);
 
-    void deleteFile(UUID id);
+    FileMetadataDeleteDto findByIdForDelete(UUID id);
+
+    FileMetadataDownloadDto findByIdForDownload(UUID id);
+
+    void deleteById(UUID id);
 }

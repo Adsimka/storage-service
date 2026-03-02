@@ -2,9 +2,7 @@ package com.job.board.storageservice.service.impl;
 
 import com.job.board.storageservice.exception.FileMetadataNotFoundException;
 import com.job.board.storageservice.mapper.FileMetadataMapper;
-import com.job.board.storageservice.model.dto.FileMetadataReadDto;
-import com.job.board.storageservice.model.dto.FileMetadataUploadDto;
-import com.job.board.storageservice.model.dto.FileUploadResponseDto;
+import com.job.board.storageservice.model.dto.*;
 import com.job.board.storageservice.model.entity.FileMetadata;
 import com.job.board.storageservice.repository.FileMetadataRepository;
 import com.job.board.storageservice.service.FileMetadataService;
@@ -14,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.function.Function;
 
 import static com.job.board.storageservice.util.constants.ErrorMessageConstants.FILE_METADATA_NOT_FOUND_MESSAGE;
 
@@ -28,24 +27,39 @@ public class FileMetadataServiceImpl implements FileMetadataService {
 
     @Override
     @Transactional
-    public FileUploadResponseDto create(FileMetadataUploadDto dto) {
+    public FileSaveResponseDto save(FileMetadataUploadDto dto) {
         FileMetadata fileMetadata = fileMetadataRepository.save(metadataMapper.toEntity(dto));
         return metadataMapper.toUploadResponseDto(fileMetadata);
     }
 
     @Override
-    public FileMetadataReadDto findById(UUID id) {
-        log.info("Search FileMetadata for id {}", id);
-        return fileMetadataRepository.findById(id)
-                .map(metadataMapper::toReadDto)
-                .orElseThrow(
-                        () -> new FileMetadataNotFoundException(FILE_METADATA_NOT_FOUND_MESSAGE.formatted(id))
-                );
+    public FileMetadataReadDto findByIdForRead(UUID id) {
+        return findById(id,metadataMapper::toReadDto);
     }
 
     @Override
-    public void deleteFile(UUID id) {
+    public FileMetadataDeleteDto findByIdForDelete(UUID id) {
+        return findById(id, metadataMapper::toDeleteDto);
+    }
+
+    @Override
+    public FileMetadataDownloadDto findByIdForDownload(UUID id) {
+        return findById(id, metadataMapper::toDownloadDto);
+    }
+
+
+    @Override
+    public void deleteById(UUID id) {
         log.info("Delete FileMetadata for id {}", id);
         fileMetadataRepository.deleteById(id);
+    }
+
+    private <D> D findById(UUID id, Function<FileMetadata, D> mapper) {
+        log.info("Search FileMetadata for id {}", id);
+        return fileMetadataRepository.findById(id)
+                .map(mapper)
+                .orElseThrow(
+                        () -> new FileMetadataNotFoundException(FILE_METADATA_NOT_FOUND_MESSAGE.formatted(id))
+                );
     }
 }

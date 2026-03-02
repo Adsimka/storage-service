@@ -6,5 +6,9 @@ import java.io.InputStream;
 
 public interface ObjectStorageService {
 
-    void putObject(FileMetadataUploadDto dto, InputStream inputStream);
+    void save(FileMetadataUploadDto dto, InputStream inputStream);
+
+    InputStream findByBucketAndStoredName(String bucket, String storedName);
+
+    void delete(String bucket, String storedName);
 }

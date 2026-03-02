@@ -1,19 +1,21 @@
 package com.job.board.storageservice.service;
 
 import com.job.board.storageservice.model.dto.FileMetadataReadDto;
-import com.job.board.storageservice.model.dto.FileUploadResponseDto;
+import com.job.board.storageservice.model.dto.FileResourceDto;
+import com.job.board.storageservice.model.dto.FileSaveResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.UUID;
 
 public interface FileStorageService {
 
-    FileUploadResponseDto upload(MultipartFile file, String bucket, UUID uploadedBy);
+    FileSaveResponseDto save(MultipartFile file, String bucket, UUID uploadedBy) throws IOException;
 
-    FileMetadataReadDto getFileMetadata(UUID id);
+    FileMetadataReadDto findById(UUID id);
 
-    byte[] downloadFile(UUID id);
+    FileResourceDto downloadById(UUID id);
 
-    void deleteFile(UUID id);
+    void deleteById(UUID id);
 
 }

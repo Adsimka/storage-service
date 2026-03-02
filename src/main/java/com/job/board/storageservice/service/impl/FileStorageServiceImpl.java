@@ -1,64 +1,59 @@
 package com.job.board.storageservice.service.impl;
 
-import com.job.board.storageservice.exception.MinioUploadException;
 import com.job.board.storageservice.mapper.FileMetadataMapper;
-import com.job.board.storageservice.model.dto.FileMetadataReadDto;
-import com.job.board.storageservice.model.dto.FileMetadataUploadDto;
-import com.job.board.storageservice.model.dto.FileUploadResponseDto;
+import com.job.board.storageservice.model.dto.*;
 import com.job.board.storageservice.service.FileMetadataService;
 import com.job.board.storageservice.service.FileStorageService;
 import com.job.board.storageservice.service.ObjectStorageService;
 import com.job.board.storageservice.validator.FileValidator;
+import io.minio.GetObjectResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.UUID;
-
-import static com.job.board.storageservice.util.constants.ErrorMessageConstants.ERROR_LOADING_FILE_IN_MINIO_MESSAGE;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
 
-    private final FileMetadataService fileMetadataService;
+    private final FileMetadataService metadataService;
     private final ObjectStorageService storageService;
     private final FileMetadataMapper metadataMapper;
     private final FileValidator fileValidator;
 
     @Override
-    public FileUploadResponseDto upload(MultipartFile file, String bucket, UUID uploadedBy) {
-        var dto = getFileMetadataUploadDto(file, bucket, uploadedBy);
+    @SneakyThrows
+    public FileSaveResponseDto save(MultipartFile file, String bucket, UUID uploadedBy) {
+        FileMetadataUploadDto dto = metadataMapper.toUploadDto(bucket, file.getOriginalFilename(), file.getContentType(), file.getSize(), uploadedBy);
         fileValidator.validate(dto);
         log.debug("Starting file upload: originalName - {}, bucket - {}", dto.originalName(), bucket);
-        try {
-            storageService.putObject(dto, file.getInputStream());
-        } catch (Exception exception) {
-            String errorMessage = ERROR_LOADING_FILE_IN_MINIO_MESSAGE.formatted(exception.getMessage());
-            log.error(errorMessage, exception);
-            throw new MinioUploadException(errorMessage);
-        }
-        return fileMetadataService.create(dto);
+        storageService.save(dto, file.getInputStream());
+
+        return metadataService.save(dto);
     }
 
     @Override
-    public FileMetadataReadDto getFileMetadata(UUID id) {
-        return fileMetadataService.findById(id);
+    public FileMetadataReadDto findById(UUID id) {
+        return metadataService.findByIdForRead(id);
     }
 
     @Override
-    public byte[] downloadFile(UUID id) {
-        return new byte[0];
+    public FileResourceDto downloadById(UUID id) {
+        FileMetadataDownloadDto dto = metadataService.findByIdForDownload(id);
+        InputStream stream = storageService.findByBucketAndStoredName(dto.bucket(), dto.storedName());
+
+        return metadataMapper.toResourceDto(dto, stream);
     }
 
     @Override
-    public void deleteFile(UUID id) {
-        fileMetadataService.deleteFile(id);
-    }
-
-    private FileMetadataUploadDto getFileMetadataUploadDto(MultipartFile file, String bucket, UUID uploadedBy) {
-        return metadataMapper.toUploadDto(bucket, file.getOriginalFilename(), file.getContentType(), file.getSize(), uploadedBy);
+    public void deleteById(UUID id) {
+        FileMetadataDeleteDto metadata = metadataService.findByIdForDelete(id);
+        storageService.delete(metadata.bucket(), metadata.storedName());
+        metadataService.deleteById(id);
     }
 }

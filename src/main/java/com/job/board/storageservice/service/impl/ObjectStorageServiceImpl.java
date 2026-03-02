@@ -1,12 +1,11 @@
 package com.job.board.storageservice.service.impl;
 
+import com.job.board.storageservice.exception.FileReceivingException;
 import com.job.board.storageservice.exception.FileRemoveException;
 import com.job.board.storageservice.exception.FileUploadException;
 import com.job.board.storageservice.model.dto.FileMetadataUploadDto;
 import com.job.board.storageservice.service.ObjectStorageService;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
 
     private final MinioClient minioClient;
 
-    public void putObject(FileMetadataUploadDto dto, InputStream inputStream) {
+    public void save(FileMetadataUploadDto dto, InputStream inputStream) {
         try {
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -38,7 +37,23 @@ public class ObjectStorageServiceImpl implements ObjectStorageService {
         }
     }
 
-    public void deleteObject(String bucket, String storedName) {
+    public InputStream findByBucketAndStoredName(String bucket, String storedName) {
+        try {
+             log.info("File retrieved: bucket={}, object={}", bucket, storedName);
+             return minioClient.getObject(
+                     GetObjectArgs.builder()
+                             .bucket(bucket)
+                             .object(storedName)
+                             .build()
+             );
+        } catch (Exception exception) {
+            String errorMessage = "Error receiving file: bucket=%s, object=%s".formatted(bucket, storedName);
+            log.error(errorMessage, exception);
+            throw new FileReceivingException(errorMessage, exception);
+        }
+    }
+
+    public void delete(String bucket, String storedName) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()

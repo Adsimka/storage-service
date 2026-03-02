@@ -43,7 +43,7 @@ public class FileMetadata {
     private String storagePath;
 
     @Column(name = "uploaded_by", nullable = false)
-    private UUID uploadBy;
+    private UUID uploadedBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
